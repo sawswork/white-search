@@ -16,7 +16,7 @@
 - [ ] Apple 側の設定（持ち主の作業。1つずつ案内する）
   - [x] Apple Developer Program の登録状況の確認（登録済み、個人）
   - [x] Bundle ID の登録（`com.sawswork.whitesearch`）
-  - [ ] App Store Connect でアプリ「White Search」を作る
+  - [x] App Store Connect でアプリ「White Search」を作る（名前は White Search のまま通った）
   - [ ] App Store Connect API キーの発行
   - [ ] GitHub の Secrets への登録
   - [ ] TestFlight の内部テスターの設定
