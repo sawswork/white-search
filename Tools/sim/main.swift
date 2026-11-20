@@ -77,7 +77,28 @@ print("== 公平さの確認（ステージ1、敵の倍率1.0） ==")
 report(strategies[1], stage: 1, enemyBase: 1.0, plain: true)
 report(strategies[2], stage: 1, enemyBase: 1.0, plain: true)
 
-for stage in 1...6 {
+// 決着がつかない戦いの調査：最後に残った人の様子を出す
+do {
+    var battle = Battle(stage: 1, seed: 1)
+    var next = 0
+    let strategy = strategies[4]
+    while battle.outcome == nil {
+        while next < strategy.script.count, battle.time >= strategy.script[next].0 {
+            _ = battle.apply(CommandParser.parse(strategy.script[next].1, roster: Roster.allies))
+            next += 1
+        }
+        battle.step(1.0 / 30.0)
+        if battle.outcome != nil || abs(battle.time - 90) < 0.02 {
+            print("-- \(Int(battle.time))秒 --")
+            for unit in battle.units where unit.alive {
+                print(String(format: "%@ %@ (%.0f, %.0f) 体力%.0f ", unit.member.name, unit.member.role.rawValue, unit.pos.x, unit.pos.y, unit.hp)
+                    + "\(unit.order.move.rawValue) \(unit.order.engage.rawValue) \(unit.order.target.rawValue)")
+            }
+        }
+    }
+}
+
+for stage in 1...1 {
     print("== ステージ \(stage) ==")
     for strategy in strategies {
         report(strategy, stage: stage, enemyBase: Battle.enemyBase, plain: false)
