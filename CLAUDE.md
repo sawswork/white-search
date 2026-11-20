@@ -25,7 +25,7 @@ iPhone / iPad アプリ「White Search」。問いを書くと、端末内AIが�
 | `docs/design.md` | 設計書 |
 | `TASKS.md` | やること、済んだこと、止まっていること |
 
-- Bundle ID：`com.sawswork.whitesearch`（仮。持ち主の確認待ち）
+- Bundle ID：`com.sawswork.whitesearch`（Apple Developer に登録済み。変更不可）
 - ホーム画面の名前：White Search ／ プロジェクト名・保存フォルダ名：WhiteSearch
 - 最低対応 OS：iOS 27 ／ Swift の言語モード：5
 
