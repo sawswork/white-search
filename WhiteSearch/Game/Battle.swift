@@ -491,11 +491,12 @@ struct Battle {
                     destination = units[chase].pos
                     stopWithin = range * 0.9
                 } else {
-                    let endY = unit.side == .ally ? 50.0 : Battle.height - 50
-                    if abs(unit.pos.y - endY) > 6 {
-                        destination = Vec(x: unit.pos.x, y: endY)
+                    // まだ前に敵がいる間はまっすぐ進む。前にいなくなったら、残った敵を探しに行く
+                    let foes = livingIndices(unit.side == .ally ? .enemy : .ally)
+                    let anyAhead = foes.contains { (units[$0].pos.y - unit.pos.y) * forward > 10 }
+                    if anyAhead || chase == nil {
+                        destination = Vec(x: unit.pos.x, y: unit.side == .ally ? 50 : Battle.height - 50)
                     } else if let chase {
-                        // 突き当たりまで来たら、残った敵を探しに行く
                         destination = units[chase].pos
                         stopWithin = range * 0.9
                     }
