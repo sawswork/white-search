@@ -1,6 +1,10 @@
 # White Search
 
-iPhone / iPad アプリ「White Search」。問いを書くと、端末内AIがトピックを出して絞り込み、答えを出す。
+iPhone / iPad アプリ「White Search」。いまの中身は、10人の部隊に自然な言葉で指示を出して敵を倒すゲーム。
+隊員は性格がばらばらで、同じ指示でもそのとおりには動かない。
+
+元は検索アプリだった。持ち主の指示でその機能はいったん置いてあり、
+コードは `Legacy/Search/`（ビルド対象外）、設計書は `docs/search-design.md` に残してある。消さない。
 
 ## 前提
 
@@ -17,12 +21,17 @@ iPhone / iPad アプリ「White Search」。問いを書くと、端末内AIが�
 | --- | --- |
 | `project.yml` | XcodeGen の設定。ここから `WhiteSearch.xcodeproj` を生成する（xcodeproj はコミットしない） |
 | `WhiteSearch/` | アプリのソース、`Info.plist`、`PrivacyInfo.xcprivacy`、`Assets.xcassets` |
-| `WhiteSearch/Engine.swift` | AI の差し替え口（`SearchEngine`）、仮データの `MockEngine`、端末内AI（文字のみ） |
-| `WhiteSearch/EngineIOS27.swift` | iOS 27 の機能：画像つきの問い、Appleのクラウド（Private Cloud Compute） |
-| `WhiteSearch/SearchModel.swift` | 検索の進行・履歴・設定・利用回数、保存（`Storage`） |
+| `WhiteSearch/Game/Roster.swift` | 役割、性格、隊員の編成 |
+| `WhiteSearch/Game/Orders.swift` | 指示の形と、決まった語を拾う読み取り（`CommandParser`） |
+| `WhiteSearch/Game/Battle.swift` | 戦いの進行。性格による動きの違いと、強さの調整値もここ |
+| `WhiteSearch/Game/Interpreter.swift` | 端末内AIによる指示の読み取り |
+| `WhiteSearch/Game/GameModel.swift` / `GameView.swift` | 進行と画面 |
+| `Tools/sim/main.swift` | 戦いを画面なしで回して勝率を出す（強さの調整用） |
+| `.github/workflows/sim.yml` | 上を Linux ランナーで実行する（mac の無料枠を使わない） |
+| `Legacy/Search/` | 置いてある検索アプリのコード（ビルド対象外） |
 | `.github/workflows/build.yml` | 署名なしのコンパイル確認 |
 | `.github/workflows/testflight.yml` | アーカイブ → 署名 → TestFlight へアップロード |
-| `docs/design.md` | 設計書 |
+| `docs/design.md` | 設計書（ゲーム版） |
 | `TASKS.md` | やること、済んだこと、止まっていること |
 
 - Bundle ID：`com.sawswork.whitesearch`（Apple Developer に登録済み。変更不可）
@@ -46,29 +55,25 @@ iPhone / iPad アプリ「White Search」。問いを書くと、端末内AIが�
 | `ASC_PRIVATE_KEY` | ダウンロードした `AuthKey_XXXXXXXXXX.p8` の中身全部（`-----BEGIN PRIVATE KEY-----` から `-----END PRIVATE KEY-----` まで） |
 | `APPLE_TEAM_ID` | Apple Developer の「チーム ID」（英数字 10 文字） |
 
-## コンパイル条件
+## 強さの調整
 
-- `IOS27_SDK`：有効。画像検索と Appleのクラウド のコードをビルドに含める。
-- `PCC_ENTITLEMENT`：**無効**。Apple から Private Cloud Compute の権限が下りるまで有効にしない。
+- `Roster.swift` `Orders.swift` `Battle.swift` は Foundation だけで書き、Linux でもコンパイルできる状態を保つ
+  （SwiftUI や UIKit を持ち込まない）。こうしておくと sim で安く確かめられる。
+- 性格や強さを変えたら、Actions の `sim` を回して勝率を確かめる。ねらいは `docs/design.md` の5章。
+- sim はロジックのコンパイル確認にもなる。mac の `build` を回す前に sim を通す。
 
-### Private Cloud Compute の権限が下りたらやること
+## コンパイル条件（検索アプリ用。いまは使っていない）
 
-1. `WhiteSearch/WhiteSearch.entitlements` を作り `com.apple.developer.private-cloud-compute` = true を入れる
-2. `project.yml` に `CODE_SIGN_ENTITLEMENTS` を足し、`SWIFT_ACTIVE_COMPILATION_CONDITIONS` に `PCC_ENTITLEMENT` を足す
-3. 署名なしアーカイブでは権限が入らないので、`testflight.yml` の署名のしかたを見直す
+- `IOS27_SDK`：`project.yml` で有効のまま。`Legacy/Search/` のコードが使う。
+- `PCC_ENTITLEMENT`：無効。Private Cloud Compute の権限なしで有効にするとアプリが落ちる。
 
 ## 守るべきルール
 
-- 機能と仕様は設計書どおり。勝手に機能を足したり削ったりしない。
+- 仕様は設計書（`docs/design.md`）どおり。変えるときは設計書も直す。
 - 見た目は仮のまま。デザインは後で別に設計する。
-- `MockEngine` を残す（端末内AIが使えない端末でも落ちないように）。
-- **標準状態でアプリは通信しない。** 分析ツール、広告、外部 SDK、自前サーバーを入れない。
-- 権限（entitlement）なしで Private Cloud Compute を呼ばない。公式文書によると、権限がなくても
-  `isAvailable` は true になりえて、問いを送った瞬間にアプリが落ちる。だから実行時の判定ではなく
-  `PCC_ENTITLEMENT` で切り離している。権限がない間は「もっと詳しく」が画面に出ない作りを保つ。
-- `PrivateCloudComputeLanguageModel()` は作っただけで Apple のサーバーへ確認が走る。必要になるまで作らない。
+- **アプリは通信しない。** 分析ツール、広告、外部 SDK、自前サーバーを入れない。
+- 端末内AIが使えない端末でも遊べるように、`KeywordInterpreter`（かんたん読み取り）を残す。
 - コード内のコメントと画面の文言は日本語。
-- 課金（StoreKit）はまだ実装しない。設定画面の試験用スイッチ（「有料版として動かす」）を残す。
 - Foundation Models の API は記憶で書かず、公式文書で確かめる。
   JSON で読める：`https://developer.apple.com/tutorials/data/documentation/foundationmodels.json`
   （個別のページは `.../documentation/foundationmodels/<名前>.json`）

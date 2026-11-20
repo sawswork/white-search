@@ -103,9 +103,9 @@ struct Battle {
 
     // 強さの調整値。Tools/sim で勝率を確かめながら決める。
     /// 敵の体力と攻撃にかける倍率（ステージ1）
-    static let enemyBase = 1.0
+    static let enemyBase = 0.8
     /// ステージが1つ進むごとに敵に足す倍率
-    static let enemyPerStage = 0.06
+    static let enemyPerStage = 0.03
 
     let stage: Int
     private(set) var units: [Unit] = []
@@ -491,7 +491,14 @@ struct Battle {
                     destination = units[chase].pos
                     stopWithin = range * 0.9
                 } else {
-                    destination = Vec(x: unit.pos.x, y: unit.side == .ally ? 50 : Battle.height - 50)
+                    let endY = unit.side == .ally ? 50.0 : Battle.height - 50
+                    if abs(unit.pos.y - endY) > 6 {
+                        destination = Vec(x: unit.pos.x, y: endY)
+                    } else if let chase {
+                        // 突き当たりまで来たら、残った敵を探しに行く
+                        destination = units[chase].pos
+                        stopWithin = range * 0.9
+                    }
                 }
             case .charge:
                 if fighting {

@@ -77,11 +77,9 @@ print("== 公平さの確認（ステージ1、敵の倍率1.0） ==")
 report(strategies[1], stage: 1, enemyBase: 1.0, plain: true)
 report(strategies[2], stage: 1, enemyBase: 1.0, plain: true)
 
-for enemyBase in [0.6, 0.7, 0.8, 0.9] {
-    for stage in 1...3 {
-        print("== 敵の倍率 \(enemyBase)　ステージ \(stage) ==")
-        for strategy in strategies {
-            report(strategy, stage: stage, enemyBase: enemyBase, plain: false)
-        }
+for stage in 1...6 {
+    print("== ステージ \(stage) ==")
+    for strategy in strategies {
+        report(strategy, stage: stage, enemyBase: Battle.enemyBase, plain: false)
     }
 }
