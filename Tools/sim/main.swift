@@ -21,9 +21,8 @@ let strategies: [Strategy] = [
         カイはさすが、前進して弱った敵を攻撃。ユイは集合。アキはお願い、前進して攻撃。\
         ナギは前進して敵の弓兵を攻撃
         """),
-        (15, "ソラは頼りにしてる、攻撃。カイはいいぞ、弱った敵を攻撃。アキはお願い、攻撃"),
-        (30, "ソラは頼りにしてる、攻撃。カイはいいぞ、弱った敵を攻撃。アキはお願い、突撃"),
-        (45, "ソラは頼りにしてる、攻撃。カイはいいぞ、弱った敵を攻撃。アキはお願い、突撃")
+        (28, "ソラは頼りにしてる、攻撃。カイはいいぞ、弱った敵を攻撃。アキはお願い、突撃"),
+        (56, "ソラは頼りにしてる、攻撃。カイはいいぞ、弱った敵を攻撃。アキはお願い、突撃")
     ]),
     Strategy(name: "性格に合わせて守る", script: [
         (0, """
@@ -38,10 +37,10 @@ let strategies: [Strategy] = [
     ])
 ]
 
-let trials = 200
+let trials = 100
 
-func run(_ strategy: Strategy, stage: Int, seed: UInt64) -> (Outcome, Int, Int, Double) {
-    var battle = Battle(stage: stage, seed: seed)
+func run(_ strategy: Strategy, stage: Int, seed: UInt64, enemyBase: Double, plain: Bool) -> (Outcome, Int, Int, Double) {
+    var battle = Battle(stage: stage, seed: seed, enemyBase: enemyBase, plainAllies: plain)
     var next = 0
     while battle.outcome == nil {
         while next < strategy.script.count, battle.time >= strategy.script[next].0 {
@@ -54,32 +53,35 @@ func run(_ strategy: Strategy, stage: Int, seed: UInt64) -> (Outcome, Int, Int, 
     return (battle.outcome!, battle.aliveCount(.ally), battle.aliveCount(.enemy), battle.time)
 }
 
-// 指示の読み取りが思ったとおりか、1度だけ表示して確かめる
-var sample = Battle(stage: 1, seed: 1)
-for (_, text) in strategies[4].script.prefix(1) {
-    for line in sample.apply(CommandParser.parse(text, roster: Roster.allies)) {
-        print("  " + line)
+func report(_ strategy: Strategy, stage: Int, enemyBase: Double, plain: Bool) {
+    var wins = 0, losses = 0, alliesLeft = 0, enemiesLeft = 0
+    var seconds = 0.0
+    for trial in 0..<trials {
+        let result = run(strategy, stage: stage, seed: UInt64(trial * 7919 + stage), enemyBase: enemyBase, plain: plain)
+        if result.0 == .win { wins += 1 }
+        if result.0 == .lose { losses += 1 }
+        alliesLeft += result.1
+        enemiesLeft += result.2
+        seconds += result.3
     }
+    let n = Double(trials)
+    print(String(
+        format: "勝ち %3d%%  負け %3d%%  味方残 %.1f  敵残 %.1f  %3.0f秒  ",
+        wins * 100 / trials, losses * 100 / trials,
+        Double(alliesLeft) / n, Double(enemiesLeft) / n, seconds / n
+    ) + strategy.name + (plain ? "（味方も全員忠実）" : ""))
 }
 
-for stage in 1...4 {
-    print("== ステージ \(stage) ==")
-    for strategy in strategies {
-        var wins = 0, losses = 0, alliesLeft = 0, enemiesLeft = 0
-        var seconds = 0.0
-        for trial in 0..<trials {
-            let result = run(strategy, stage: stage, seed: UInt64(trial * 7919 + stage))
-            if result.0 == .win { wins += 1 }
-            if result.0 == .lose { losses += 1 }
-            alliesLeft += result.1
-            enemiesLeft += result.2
-            seconds += result.3
+// 仕組みが公平か：味方も全員忠実なら、同じ指示で五分に近いはず
+print("== 公平さの確認（ステージ1、敵の倍率1.0） ==")
+report(strategies[1], stage: 1, enemyBase: 1.0, plain: true)
+report(strategies[2], stage: 1, enemyBase: 1.0, plain: true)
+
+for enemyBase in [0.6, 0.7, 0.8, 0.9] {
+    for stage in 1...3 {
+        print("== 敵の倍率 \(enemyBase)　ステージ \(stage) ==")
+        for strategy in strategies {
+            report(strategy, stage: stage, enemyBase: enemyBase, plain: false)
         }
-        let n = Double(trials)
-        print(String(
-            format: "勝ち %3d%%  負け %3d%%  味方残 %.1f  敵残 %.1f  %3.0f秒  ",
-            wins * 100 / trials, losses * 100 / trials,
-            Double(alliesLeft) / n, Double(enemiesLeft) / n, seconds / n
-        ) + strategy.name)
     }
 }

@@ -115,7 +115,9 @@ struct Battle {
     private var rng: SeededRandom
     private var enemyStep = 0
 
-    init(stage: Int, seed: UInt64) {
+    /// enemyBase と plainAllies は強さの調整（Tools/sim）のためのもの。
+    /// plainAllies を true にすると、味方も全員が言われたとおりに動く。
+    init(stage: Int, seed: UInt64, enemyBase: Double = Battle.enemyBase, plainAllies: Bool = false) {
         self.stage = stage
         rng = SeededRandom(seed: seed)
 
@@ -126,9 +128,12 @@ struct Battle {
             Vec(x: 300, y: 830),
             Vec(x: 80, y: 740), Vec(x: 520, y: 740)
         ]
-        let enemyScale = Battle.enemyBase + Battle.enemyPerStage * Double(stage - 1)
+        let enemyScale = enemyBase + Battle.enemyPerStage * Double(stage - 1)
 
-        for (index, member) in Roster.allies.enumerated() {
+        for (index, original) in Roster.allies.enumerated() {
+            let member = plainAllies
+                ? Member(name: original.name, role: original.role, personality: .loyal)
+                : original
             let captain = index == 0
             let hp = member.role.maxHP * (captain ? 1.3 : 1)
             units.append(Unit(
@@ -189,7 +194,7 @@ struct Battle {
 
         if command.tone != .neutral {
             units[index].tone = command.tone
-            units[index].toneUntil = time + 15
+            units[index].toneUntil = time + 30
         }
 
         switch units[index].member.personality {
@@ -227,7 +232,7 @@ struct Battle {
                 reaction = "\(name)：へそを曲げてしまった"
             } else if command.tone == .polite {
                 units[index].moodObeys = true
-                units[index].moodNextRoll = time + 15
+                units[index].moodNextRoll = time + 30
                 reaction = "\(name)：\(command.summary)…機嫌よく引き受けた"
             }
         case .slow:
@@ -471,7 +476,8 @@ struct Battle {
 
         if let goal = plan.goal {
             destination = goal
-            stopWithin = 30
+            // 助けに行くときは、回復が届く所で止まる
+            stopWithin = unit.role == .medic ? unit.role.range * 0.7 : 30
         } else {
             switch plan.order.move {
             case .hold:
