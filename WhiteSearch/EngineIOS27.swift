@@ -55,7 +55,7 @@ struct VisionOnDeviceEngine: SearchEngine {
             prompt: Prompts.answer(request, detailed: false),
             imageData: request.imageData
         )
-        return AnswerResult(headline: result.headline, points: result.points)
+        return AnswerResult(headline: result.headline, points: result.points, answerable: result.answerable)
     }
 }
 
@@ -105,7 +105,7 @@ struct CloudEngine: SearchEngine {
             prompt: Prompts.answer(request, detailed: true),
             imageData: request.imageData
         )
-        return AnswerResult(headline: result.headline, points: result.points)
+        return AnswerResult(headline: result.headline, points: result.points, answerable: result.answerable)
     }
 }
 #endif

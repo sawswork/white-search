@@ -12,6 +12,8 @@ final class SearchModel: ObservableObject {
     static let freeHistoryLimit = 20
     /// これ以上は絞らず、必ず答えを出す階層数
     static let maxDepth = 4
+    /// 手持ちの知識では答えられない問いに出す文言
+    static let unanswerableText = "端末内では答えられません"
 
     @Published private(set) var trees: [SearchTree] = []
     @Published private(set) var currentTreeID: UUID?
@@ -156,6 +158,33 @@ final class SearchModel: ObservableObject {
         await expand(avoid: old.map(\.text), forceTopics: true)
     }
 
+    /// 言葉を足して絞り直す。選択肢に合うものがないときや、出た答えがずれていたときに使う。
+    /// 足した言葉は、自分で選んだトピックとして同じ木に残る。
+    func addWords(_ words: String) async {
+        let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !isLoading, !text.isEmpty, let node = currentNode else { return }
+
+        // 答えを見たあとなら、その答えは「選ばなかった枝」にして、1つ手前から続ける
+        let fromAnswer = node.kind == .answer
+        guard let baseID = fromAnswer ? node.parent : node.id else { return }
+
+        let added = Node(kind: .topic, text: text, parent: baseID, chosen: true)
+        updateTree { tree in
+            if fromAnswer { tree.nodes[node.id]?.chosen = false }
+            tree.nodes[added.id] = added
+            tree.nodes[baseID]?.children.append(added.id)
+        }
+        currentNodeID = added.id
+        save()
+
+        if fromAnswer {
+            // 一度答えを見ているので、足した言葉を踏まえた答えをすぐ出す
+            await makeAnswer()
+        } else {
+            await expand()
+        }
+    }
+
     /// 絞り込みをやめて、いまの位置で答えを出す。
     func answerNow() async {
         guard !isLoading, let node = currentNode, node.kind != .answer else { return }
@@ -174,6 +203,11 @@ final class SearchModel: ObservableObject {
         defer { isLoading = false }
         do {
             let result = try await detailEngine.answer(request)
+            guard result.answerable else {
+                // クラウドでも答えられない問いは、端末内の答えをそのまま残す
+                errorMessage = "詳しい答えを作れませんでした"
+                return
+            }
             updateTree { tree in
                 tree.nodes[answer.id]?.text = result.headline
                 tree.nodes[answer.id]?.points = result.points
@@ -253,7 +287,8 @@ final class SearchModel: ObservableObject {
         defer { isLoading = false }
         do {
             let result = try await engine.topics(request)
-            if result.canAnswer && !request.path.isEmpty && !forceTopics {
+            // 答えが1つに決まる問いは、絞り込みをはさまずに答える
+            if result.canAnswer && !forceTopics {
                 isLoading = false
                 await makeAnswer()
                 return
@@ -280,7 +315,14 @@ final class SearchModel: ObservableObject {
         defer { isLoading = false }
         do {
             let result = try await engine.answer(request)
-            var answer = Node(kind: .answer, text: result.headline, points: result.points, parent: nodeID, chosen: true)
+            // 答えられない問いには、無理に答えず正直にそう出す
+            var answer = Node(
+                kind: .answer,
+                text: result.answerable ? result.headline : Self.unanswerableText,
+                points: result.answerable ? result.points : [],
+                parent: nodeID,
+                chosen: true
+            )
             answer.source = engine.name
             let finished = answer
             updateTree { tree in

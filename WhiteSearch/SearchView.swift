@@ -18,6 +18,10 @@ struct SearchView: View {
     @State private var showingPhotos = false
     @State private var photoItem: PhotosPickerItem?
 
+    /// 「言葉を足す」の入力
+    @State private var showingAddWords = false
+    @State private var addedWords = ""
+
     /// 初回だけ出すヒントの管理
     @AppStorage("hasTyped") private var hasTyped = false
     @AppStorage("hasSent") private var hasSent = false
@@ -75,6 +79,18 @@ struct SearchView: View {
         .fullScreenCover(isPresented: $showingCamera) {
             CameraPicker { image in attachedImage = image }
                 .ignoresSafeArea()
+        }
+        .alert("言葉を足す", isPresented: $showingAddWords) {
+            TextField("", text: $addedWords)
+            Button("送る") {
+                let words = addedWords
+                addedWords = ""
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                Task { await model.addWords(words) }
+            }
+            Button("やめる", role: .cancel) { addedWords = "" }
+        } message: {
+            Text("合うものがないときや、答えがずれているときに、知りたいことを一言足します")
         }
         .sheet(isPresented: $showingHistory) {
             HistoryView()
@@ -305,14 +321,26 @@ struct SearchView: View {
                 .disabled(model.isLoading)
                 Divider()
             }
+            // 上の段：絞り込みを進める操作
             HStack(spacing: 20) {
                 if model.canGoBack {
                     Button("戻る") { model.goBack() }
                 }
                 if model.currentAnswer == nil {
                     Button("別の候補") { Task { await model.regenerate() } }
+                }
+                Button("言葉を足す") { showingAddWords = true }
+                if model.currentAnswer == nil {
                     Button("答えを見る") { Task { await model.answerNow() } }
                 }
+                Spacer()
+            }
+            .font(.footnote)
+            .foregroundStyle(Color.gray)
+            .frame(minHeight: 44)
+            .disabled(model.isLoading)
+            // 下の段：画面を移る操作
+            HStack(spacing: 20) {
                 Spacer()
                 Button("履歴") { openHistory() }
                 Button("新しく調べる") {
