@@ -1,0 +1,18 @@
+# 戦いを画面なしで何度も回し、指示の出し方ごとの勝率を出す（強さの調整用）。
+# Linux ランナーで動くので、mac ランナーの無料枠は使わない。手動実行のみ。
+name: sim
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: 戦いを回す
+        run: |
+          swift --version
+          swiftc -O WhiteSearch/Game/Roster.swift WhiteSearch/Game/Orders.swift WhiteSearch/Game/Battle.swift Tools/sim/main.swift -o sim
+          ./sim
