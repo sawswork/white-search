@@ -17,17 +17,17 @@
   - [x] Apple Developer Program の登録状況の確認（登録済み、個人）
   - [x] Bundle ID の登録（`com.sawswork.whitesearch`）
   - [x] App Store Connect でアプリ「White Search」を作る（名前は White Search のまま通った）
-  - [ ] App Store Connect API キーの発行
-  - [ ] GitHub の Secrets への登録
+  - [x] App Store Connect API キーの発行
+  - [x] GitHub の Secrets への登録
   - [ ] TestFlight の内部テスターの設定
   - [ ] Private Cloud Compute の権限の申請
-- [ ] `testflight.yml` を成功させ、TestFlight にビルドを届ける
+- [x] `testflight.yml` を成功させ、TestFlight にビルドを届ける（1回目で成功。約4分。バージョン 0.2、ビルド 1）
 - [ ] iPad の TestFlight からインストールして起動を確かめる
 - [ ] 設定画面の「AI」が「端末内AI」と表示されるのを確かめる
 
 ## 止まっていること
 
-- **TestFlight への配信**：Apple 側の設定と Secrets の登録待ち
+- **実機での確認**：内部テスターの設定と、iPad へのインストール待ち（持ち主の作業）
 
 ## あとで決めること
 
