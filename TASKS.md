@@ -11,7 +11,7 @@
 
 ## やること
 
-- [ ] `build.yml` を成功させる
+- [x] `build.yml` を成功させる（1回目で成功。約1分。Xcode 27.2 / iOS 27 SDK）
 - [ ] 設計書を `docs/design.md` に置く
 - [ ] Apple 側の設定（持ち主の作業。1つずつ案内する）
   - [ ] Apple Developer Program の登録状況の確認
