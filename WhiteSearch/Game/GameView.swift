@@ -59,7 +59,7 @@ struct GameView: View {
             .padding(32)
             .background(Color.white.opacity(0.92))
         } else if !model.started {
-            Text("指示を書くと戦いが始まります\n下が味方、上が敵。「隊員」で性格を確かめられます")
+            Text("指示を書くと戦いが始まります\n下が味方、上が敵。「隊員」で指示の出し方を確かめられます")
                 .font(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color.gray)
@@ -206,7 +206,7 @@ struct FieldView: View {
     }
 }
 
-/// 隊員の一覧。性格と、どう指示すればよいかの手がかりを見せる。
+/// 隊員の一覧と、指示の出し方。
 struct RosterView: View {
     let interpreterName: String
     let onReset: () -> Void
@@ -217,13 +217,8 @@ struct RosterView: View {
             List {
                 Section("隊員") {
                     ForEach(Array(Roster.allies.enumerated()), id: \.offset) { index, member in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(member.name)　\(member.role.rawValue)\(index == 0 ? "（隊長）" : "")　\(member.personality.rawValue)")
-                                .font(.subheadline.weight(.semibold))
-                            Text(member.personality.note)
-                                .font(.footnote)
-                                .foregroundStyle(Color.gray)
-                        }
+                        Text("\(member.name)　\(member.role.rawValue)\(index == 0 ? "（隊長）" : "")")
+                            .font(.subheadline)
                     }
                 }
                 Section {
@@ -231,7 +226,6 @@ struct RosterView: View {
                     Text("動き：前進、後退、左へ、右へ、中央へ、待機、突撃、集合")
                     Text("敵の扱い：攻撃する、反撃だけ、攻撃しない")
                     Text("狙い：近い敵、弱った敵、敵の弓兵、敵の衛生兵")
-                    Text("言い方でも動きが変わります（頼む、きびしく命じる、はげます）")
                 } header: {
                     Text("指示の出し方")
                 }

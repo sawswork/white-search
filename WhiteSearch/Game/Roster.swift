@@ -68,6 +68,7 @@ enum Role: String, CaseIterable {
 }
 
 /// 性格。同じ指示でも、性格によって動きが変わる。
+/// いまは全員を忠実にしてあり、ほかの性格は使っていない。
 enum Personality: String, CaseIterable {
     case loyal = "忠実"
     case reckless = "猪突猛進"
@@ -118,17 +119,19 @@ struct Member {
 enum Roster {
     /// 味方の10人。先頭が隊長。
     /// 前で戦う剣士4、後ろから撃つ弓兵3、回復の衛生兵1、足の速い斥候2。
+    /// いまは全員が言われたとおりに動く（持ち主の指示で、性格の違いはなくしてある。
+    /// 性格ごとの動きのしくみは Battle.swift に残してあり、ここを変えれば戻せる）。
     static let allies: [Member] = [
         Member(name: "ハヤト", role: .sword, personality: .loyal),
-        Member(name: "ゴウ", role: .sword, personality: .reckless),
-        Member(name: "レン", role: .sword, personality: .contrary),
-        Member(name: "ダイチ", role: .sword, personality: .slow),
-        Member(name: "ミオ", role: .archer, personality: .cautious),
-        Member(name: "ソラ", role: .archer, personality: .timid),
-        Member(name: "カイ", role: .archer, personality: .showy),
-        Member(name: "ユイ", role: .medic, personality: .caring),
-        Member(name: "ナギ", role: .scout, personality: .hasty),
-        Member(name: "アキ", role: .scout, personality: .moody)
+        Member(name: "ゴウ", role: .sword, personality: .loyal),
+        Member(name: "レン", role: .sword, personality: .loyal),
+        Member(name: "ダイチ", role: .sword, personality: .loyal),
+        Member(name: "ミオ", role: .archer, personality: .loyal),
+        Member(name: "ソラ", role: .archer, personality: .loyal),
+        Member(name: "カイ", role: .archer, personality: .loyal),
+        Member(name: "ユイ", role: .medic, personality: .loyal),
+        Member(name: "ナギ", role: .scout, personality: .loyal),
+        Member(name: "アキ", role: .scout, personality: .loyal)
     ]
 
     /// 敵の10人。編成は味方と同じで、全員が言われたとおりに動く。先頭が隊長。

@@ -27,7 +27,7 @@ enum TargetPref: String, CaseIterable {
     case medic = "敵の衛生兵"
 }
 
-/// 言い方。性格によって効き方が違う。
+/// 言い方。性格によって効き方が違う。いまは全員が忠実なので、動きには影響しない。
 enum Tone: String, CaseIterable {
     case neutral = "ふつう"
     case polite = "ていねい"
@@ -59,7 +59,6 @@ struct Command {
         if let move { parts.append(move.rawValue) }
         if let engage { parts.append(engage.rawValue) }
         if let target { parts.append(target.rawValue) }
-        if tone != .neutral { parts.append("（\(tone.rawValue)）") }
         return parts.joined(separator: "・")
     }
 }

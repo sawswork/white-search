@@ -44,9 +44,6 @@ struct GeneratedCommand {
 
     @Guide(description: "狙う敵。書かれていなければ「そのまま」。", .anyOf(["そのまま"] + TargetPref.allCases.map(\.rawValue)))
     var target: String
-
-    @Guide(description: "言い方。頼む調子なら「ていねい」、急かす・強く命じるなら「きびしい」、ほめる・安心させるなら「はげまし」、それ以外は「ふつう」。", .anyOf(Tone.allCases.map(\.rawValue)))
-    var tone: String
 }
 
 @available(iOS 26.0, *)
@@ -105,8 +102,7 @@ struct OnDeviceInterpreter: OrderInterpreter {
             targets: targets,
             move: Move(rawValue: generated.move),
             engage: Engage(rawValue: generated.engage),
-            target: TargetPref(rawValue: generated.target),
-            tone: Tone(rawValue: generated.tone) ?? .neutral
+            target: TargetPref(rawValue: generated.target)
         )
         return command.hasAction ? command : nil
     }

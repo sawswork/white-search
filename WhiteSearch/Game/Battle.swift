@@ -103,9 +103,9 @@ struct Battle {
 
     // 強さの調整値。Tools/sim で勝率を確かめながら決める。
     /// 敵の体力と攻撃にかける倍率（ステージ1）
-    static let enemyBase = 0.8
+    static let enemyBase = 1.0
     /// ステージが1つ進むごとに敵に足す倍率
-    static let enemyPerStage = 0.03
+    static let enemyPerStage = 0.05
 
     let stage: Int
     private(set) var units: [Unit] = []
