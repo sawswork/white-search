@@ -1,0 +1,8 @@
+# XcodeGen が生成するもの
+*.xcodeproj
+# ビルドの生成物
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+.DS_Store

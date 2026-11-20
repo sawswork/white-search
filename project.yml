@@ -1,0 +1,41 @@
+# XcodeGen の設定。ここから WhiteSearch.xcodeproj を生成する（xcodeproj はリポジトリに入れない）。
+name: WhiteSearch
+options:
+  deploymentTarget:
+    iOS: "27.0"
+  developmentLanguage: ja
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.2"
+    # ビルド番号。TestFlight 用のビルドでは Actions が実行ごとに上書きする。
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  WhiteSearch:
+    type: application
+    platform: iOS
+    sources:
+      - path: WhiteSearch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sawswork.whitesearch
+        PRODUCT_NAME: WhiteSearch
+        INFOPLIST_FILE: WhiteSearch/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        # IOS27_SDK：画像検索と Appleのクラウド のコードをビルドに含める。
+        # PCC_ENTITLEMENT：Private Cloud Compute の権限が Apple から下りたら、ここに足す
+        #   （同時に entitlements も追加する。手順は CLAUDE.md）。
+        #   権限なしで足すと「もっと詳しく」を押した瞬間にアプリが落ちる。
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) IOS27_SDK"
+schemes:
+  WhiteSearch:
+    build:
+      targets:
+        WhiteSearch: all
+    archive:
+      config: Release
